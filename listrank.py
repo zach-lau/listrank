@@ -14,14 +14,20 @@ from generate import generate
 def ll(theta, results):
     """ Get log likelihood of results given theta"""
     return sum([log(norm.cdf(theta[x]-theta[y])) for (x,y) in results])
-def gradll(theta, results):
+def gradll(theta, resw, resl):
     """ Gradient of log likelihood of reslts at theta"""
     g = np.zeros(len(theta))
+    gett = lambda x : theta[x]
+    tw = gett(resw)
+    tl = gett(resl)
+    # We use the vectorized versino of norm.pdf and norm.cdf to speed up this bottleneck
+    risk = norm.pdf(tw-tl) / norm.cdf(tw-tl)
     # Optimization candidate
-    for x,y in results:
-        diff = norm.pdf(theta[x]-theta[y]) / norm.cdf(theta[x]-theta[y])
-        g[x] += diff
-        g[y] -= diff
+    for i in range(len(theta)):
+        x = resw[i]
+        y = resl[i]
+        g[x] += risk[i]
+        g[y] -= risk[i]
     return g
 def order(theta):
     """ Return the theta value """
@@ -37,8 +43,12 @@ if __name__ == "__main__":
     alpha = 0.01 # step size
     gsize = 100 # big number\
     it = 0
-    while gsize > 0.1 and it < 10000:
-        delta = gradll(theta, results[1])
+    # Pre-parse the results into numpy for faster performance
+    res = results[1]
+    resw = np.array([a for (a,_) in res], dtype=np.uint32)
+    resl = np.array([b for (_,b) in res], dtype=np.uint32)
+    while gsize > 0.01 and it < 10000:
+        delta = gradll(theta, resw, resl)
         theta += alpha*delta
         gsize = np.linalg.norm(delta)
         it += 1
