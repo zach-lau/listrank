@@ -10,18 +10,19 @@ from scipy.stats import norm
 # Tests to do 
 # - test with identity compfunc and fixed theta
 # - test that our probability of getting one sample of each is calculated correctly
-def generate(n=10, compf = "basic"):
+def generate(n=10, compf = "basic", scale=1, c = None):
     """
     Return a list of randomly generated comparisons. The first element is deemed better up to fuzzing than teh second
     """
     func_dict = {
         "basic" : lambda x,y : 1 if x > y else 0,
-        "normal" : lambda x,y : norm.cdf(x-y)
+        "normal" : lambda x,y : norm.cdf(scale*(x-y))
     }
     cfunc = func_dict[compf]
     alpha = 0.01
-    c = ceil( log(alpha) / log(1-2/n) ) # number of comparisons needed for 1-alpha% chance each element shows up in at least
-    # one comparison
+    if c == None:
+        c = ceil( log(alpha) / log(1-2/n) ) # number of comparisons needed for 1-alpha% chance each element shows up in 
+                                            # at least one comparison
     theta = normal(0, 1, n) # true value of each parameter
     results = []
     # TODO vectorize this
