@@ -28,7 +28,7 @@ def gradll(theta, resw, resl):
         y = resl[i]
         g[x] += risk[i]
         g[y] -= risk[i]
-    g -= len(theta)/2*log(2*pi)*theta # ridge regressions. Constant comes from standard normal prior
+    g -= theta # ridge regressions. Constant comes from standard normal prior
     return g
 def order(theta):
     """ Return the theta value """
